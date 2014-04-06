@@ -1,6 +1,5 @@
-#include "main.h"
-#include "init.h"
-#include  "main.h"
+#include "include/main.h"
+#include "include/init.h"
 
 void coordinateur(int my_rank){
 	bootstrap.x = /* a recuperer dans msg*/;

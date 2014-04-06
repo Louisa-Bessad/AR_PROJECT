@@ -6,7 +6,7 @@ typedef struct coord{
 	int y;
 } coordonnee;
 
-typedef struct do{
+typedef struct data{
 	coordonnee id;
 	int values;
 } donnee;
