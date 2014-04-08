@@ -1,4 +1,0 @@
-#include "struct.h"
-
-
-int send_responce(int, int, int);

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
+#include <unistd.h>
 #include "struct.h"
 #include "define.h"
 

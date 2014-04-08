@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <mpi.h>
+#include <unistd.h>
 #include "struct.h"
 #include "define.h"
 #include "tools.h"
