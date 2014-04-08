@@ -11,6 +11,8 @@
 #include "define.h"
 #include "tools.h"
 
+#include "init.h"
+
 
 void coordinateur(int);
 int ask_insertion(int);

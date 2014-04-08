@@ -1,6 +1,5 @@
 #include "../include/main.h"
-#include "../include/init.h"
-#include "../include/tools.h"
+
 
 void coordinateur(int my_rank){
   int msg[2];
@@ -23,23 +22,28 @@ void coordinateur(int my_rank){
 }
 
 int ask_insertion(int my_rank){
-  int msg, msg_coord[2];
+  int msg, msg_coord[2], buf[2];
   MPI_Status status;
-  int dif_borne_x, dif_borne_y,  moitie_x, moitie_y;
+  int dif_borne_x, dif_borne_y,  moitie_x, moitie_y, done=0;
   
   while(1){
-    MPI_Recv(msg_coord, 2, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status); 
+
+    MPI_Recv(msg_coord, 2, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+
     switch(status.MPI_TAG){
+
+
     case __TAG_BEGIN_INSERT:
       printf("%d : received %d\n", my_rank, status.MPI_TAG);
       if (my_rank>1){
         MPI_Send(&id_coord,2, MPI_INT, 1, __TAG_INSERT_ME, MPI_COMM_WORLD);
         printf("%d : envoi à 1 de __TAG_INSERT_ME\n", my_rank); 
-        MPI_Recv(&msg, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+        //MPI_Recv(&msg, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
       }
-      printf("%d : inserted\n", my_rank);
+      //printf("%d : inserted\n", my_rank);
       MPI_Send(msg_coord, 2, MPI_INT, 0, __TAG_NODE_INSERTED, MPI_COMM_WORLD);
       break;
+
 
     case __TAG_INSERT_ME:
       printf("%d : received %d\n", my_rank, status.MPI_TAG);
@@ -53,36 +57,68 @@ int ask_insertion(int my_rank){
       	    printf("rectangle horizontal ou carre");
       	    moitie_x = dif_borne_x/2;
       	    if (id_coord.x > moitie_x){
-      	      send_response(inter.bix, moitie_x, status.MPI_SOURCE);
-      	      send_response(inter.biy, inter.bsy, status.MPI_SOURCE);
       	      /*le nouveau noeud sera dans [bix ; moitie]*/
+
+              printf("%d : il est dans ma zone,  %d %d %d %d\n", my_rank, inter.bix, moitie_x, inter.biy, inter.bsy);
+              send_response(inter.bix, moitie_x, status.MPI_SOURCE);
+              send_response(inter.biy, inter.bsy, status.MPI_SOURCE);
+              update_bornes(my_rank, moitie_x, inter.bix, inter.biy, inter.bsy);
       	    }
       	    else{
-      	      send_response(moitie_x, inter.bsx, status.MPI_SOURCE);
-      	      send_response(inter.biy, inter.bsy, status.MPI_SOURCE);
       	      /*le nouveau noeud sera dans [moitie ; bsx]*/
+
+              printf("%d : il est dans ma zone,  %d %d %d %d\n", my_rank, moitie_x, inter.bsx, inter.biy, inter.bsy);
+              send_response(moitie_x, inter.bsx, status.MPI_SOURCE);
+              send_response(inter.biy, inter.bsy, status.MPI_SOURCE);
+              update_bornes(my_rank, inter.bsx, moitie_x, inter.biy, inter.bsy);
       	    }
           }
       	  else{
       	    printf("rectangle vertical");
       	    /*rectangle vertical*/
       	    moitie_y = dif_borne_y/2;
-      	    if (id_coord.y > moitie_y){
-      	      send_response(inter.bix, inter.bsx, status.MPI_SOURCE);
-      	      send_response(inter.biy, moitie_y, status.MPI_SOURCE);
+            if (id_coord.y > moitie_y){
       	      /*le nouveau noeud sera dans [biy ; moitie]*/
+
+              printf("%d : il est dans ma zone,  %d %d %d %d\n", my_rank, inter.bix, inter.bsx, inter.biy, moitie_y);
+              send_response(inter.bix, inter.bsx, status.MPI_SOURCE);
+              send_response(inter.biy, moitie_y, status.MPI_SOURCE);
+              update_bornes(my_rank, inter.bix, inter.bsx, moitie_y, inter.biy);
+
       	    }
       	    else{
-      	      send_response(inter.bix, inter.bsx, status.MPI_SOURCE);
-      	      send_response(moitie_y, inter.bsy, status.MPI_SOURCE);
       	      /*le nouveau noeud sera dans [moitie ; bsy]*/
+
+              printf("%d : il est dans ma zone,  %d %d %d %d\n", my_rank, inter.bix, inter.bsx, moitie_y, inter.bsy);
+              send_response(inter.bix, inter.bsx, status.MPI_SOURCE);
+              send_response(moitie_y, inter.bsy, status.MPI_SOURCE);
+              update_bornes(my_rank, inter.bix, inter.bsx, inter.bsy, moitie_y);
       	    }
       	  }
         }
       }
+      else{
+        sleep(3);
+      }
 	    break;
+
+
     case __TAG_RESP_INSERT:
-      printf("COUROUR\n");
+      if (done){
+        if (is_in(id_coord.x, buf[0], buf[1]) && is_in(id_coord.y, msg_coord[0], msg_coord[1]) ){
+          //printf("%d : in my bornes\n", my_rank);
+          update_bornes(my_rank, buf[0], buf[1], msg_coord[0], msg_coord[1]);
+        }
+        else{
+          choose_new_bornes(buf[0], buf[1], msg_coord[0], msg_coord[1]);
+        }
+      }
+      else{
+        buf[0]=msg_coord[0];
+        buf[1]=msg_coord[1];
+        done=1;
+      }
+
     default:
 	    break;
     }
