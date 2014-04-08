@@ -16,6 +16,6 @@ typedef struct borne{
   int bsx;
   int biy;
   int bsy;
-} borde;
+} borne;
 
 #endif

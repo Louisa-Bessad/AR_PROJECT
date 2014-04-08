@@ -8,9 +8,8 @@
 #include <mpi.h>
 #include "struct.h"
 #include "define.h"
+#include "tools.h"
 
-coordonnee bootstrap, id_coord;
-borne inter;
 
 void coordinateur(int);
 int ask_insertion(int);
