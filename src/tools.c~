@@ -1,0 +1,10 @@
+#include "../include/tools.h"
+#include "struct.h"
+
+
+
+int send_responds(int val1, int val2, MPI_Status status){
+  msg_coord[0] = val1;
+  msg_coord[1] = val2;
+  MPI_Send(&msg_coord, 2, MPI_INT, status.MPI_SOURCE, __TAG_RESP_INSERT, MPI_COMM_WORLD);
+}

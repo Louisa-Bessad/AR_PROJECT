@@ -11,4 +11,11 @@ typedef struct data{
 	int values;
 } donnee;
 
+typedef struct borne{
+  int bix;
+  int bsx;
+  int biy;
+  int bsy;
+} borde;
+
 #endif

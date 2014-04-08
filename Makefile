@@ -1,17 +1,17 @@
 CC = mpicc 
-CFLAGS = -03
 INC = include
 
 all: bin/main
 
-bin/main: obj/init.o obj/main.o
-	${CC} ${CFLAGS} -o $@ $^
-
-obj/main.o: src/main.c $(INC)/main.h
-	${CC} -c $^
+bin/main: obj/main.o obj/init.o 
+	${CC} -o $@ $^
 
 obj/init.o: src/init.c $(INC)/init.h
-	${CC} -c $^ 
+	${CC} -c $< -o $@
+
+obj/main.o: src/main.c $(INC)/main.h
+	${CC} -c $< -o $@
+
 
 clean: 
 	rm bin/* obj/*

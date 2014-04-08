@@ -9,7 +9,6 @@
 #include "struct.h"
 #include "define.h"
 
-
 coordonnee bootstrap, id_coord;
 borne inter;
 

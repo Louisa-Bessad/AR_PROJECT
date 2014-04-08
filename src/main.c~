@@ -1,0 +1,60 @@
+#include "../include/main.h"
+#include "../include/init.h"
+
+void coordinateur(int my_rank){
+  while(1){
+    MPI_Recv(&msg, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+    switch (status.MPI_TAG){
+    case TAG:
+      break;
+
+
+
+    default: 
+      break;
+    }
+  }
+}
+
+int ask_insertion(int my_rank){
+  int msg, msg_coor[2];
+  MPI_Status status;
+
+
+  while(1){
+    MPI_Recv(&msg, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); /* Ok pour s'insérer (recu du coordinateur)*/
+    switch(status.MPI_TAG){ 
+    case __TAG_BEGIN_INSERT:
+      MPI_Send(&id_coord,2, MPI_INT, 1, MPI_ANY_TAG, MPI_COMM_WORLD); /* Demande et envoie des coordonnees au bootstrap*/
+      MPI_Recv(&msg, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status); /* Attente de l'accord de la zone ou il doit s'inserer*/
+      break;
+      /*Modifier ses bornes*/
+      /*dire voisin de l'ancien qu'il est le nouveau*/
+    
+    default:
+      break;
+    }
+
+    return 0;
+  }
+
+int main(int argc, char const *argv[])
+{
+  int nb_proc,*my_rank, bootstrap;
+  MPI_Init(&argc, &argv);
+  MPI_Comm_size(MPI_COMM_WORLD, &nb_proc);
+  MPI_Comm_rank(MPI_COMM_WORLD,&my_rank);
+
+  if(my_rank == 0){
+    init_coordinateur(my_rank);
+    coordinateur(my_rank);
+  }
+  else {
+    init_node(my_rank);
+    ask_insertion(my_rank);
+  }
+
+
+  MPI_Finalize();
+  return 0;
+}
