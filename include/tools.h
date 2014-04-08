@@ -13,6 +13,6 @@ int send_response(int, int, int);
 int dif(int, int);
 int update_bornes(int, int, int, int, int);
 int is_in(int, int, int);
-int choose_new_bornes(int, int, int, int);
+int choose_new_coords(int, int, int, int, int);
 
 #endif
