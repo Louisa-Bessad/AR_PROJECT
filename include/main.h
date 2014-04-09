@@ -10,7 +10,6 @@
 #include "struct.h"
 #include "define.h"
 #include "tools.h"
-
 #include "init.h"
 
 

@@ -2,23 +2,29 @@
 
 
 void coordinateur(int my_rank){
-  int msg[2];
+  int msg[3];
   MPI_Status status;
-  int cpt_nodes = 1;
+  int cpt_nodes = 2;
   printf("%d : coordinateur\n", my_rank);
-  while(cpt_nodes<N){
+  while(cpt_nodes<=N+1){
     MPI_Recv(msg, 3, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
     switch (status.MPI_TAG){
     case __TAG_NODE_INSERTED:
+      /* switching to the next node to insert */
+      /* coordinator sends a message to engage the node's insertion */
       printf("%d : received TAG__NODE_INSERTED\n", my_rank);
+      if(cpt_nodes < N+1){
+        printf("%d : sending __TAG_BEGIN_INSERT to %d\n", my_rank, cpt_nodes);
+        MPI_Send(&msg,3, MPI_INT, cpt_nodes, __TAG_BEGIN_INSERT, MPI_COMM_WORLD);
+      }
       cpt_nodes++;
-      MPI_Send(&id_coord,3, MPI_INT, cpt_nodes, __TAG_BEGIN_INSERT, MPI_COMM_WORLD);
       break;
 
     default: 
       break;
     }
   }
+  printf("%d : out\n", my_rank);
 }
 
 int ask_insertion(int my_rank){

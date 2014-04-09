@@ -18,6 +18,7 @@ typedef struct borne{
   int bsy;
 } borne;
 
+
 typedef struct double_circular_linked_list{
 	int rank;
 	coordonnee point;
