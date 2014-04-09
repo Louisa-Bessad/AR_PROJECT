@@ -93,7 +93,6 @@ int find_neighbour (nei_list* racine, int val, int mode){
 		{
 			printf("\t racine : %p\n", racine);
 			if((it->inter.bix < val) && (val < it->inter.bsx)){
-				printf("\t\tici\n");
 				return it->rank;
 			}
 			it = it->next;

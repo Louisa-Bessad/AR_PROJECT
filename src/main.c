@@ -53,12 +53,14 @@ int ask_insertion(int my_rank){
 
     case __TAG_INSERT_ME:
   	  printf("%d : received __TAG_INSERT_ME received : %d %d , bornes : %d %d %d %d\n", my_rank, msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.bsy);
-      if((inter.bix < msg_coord[0]) && (msg_coord[0] < inter.bsx)){
-        if((inter.biy < msg_coord[1]) && (msg_coord[1] < inter.bsy)){
-      	  dif_borne_x = dif(inter.bsx, inter.bix);
-      	  dif_borne_y = dif(inter.bsy, inter.biy);
-    	    moitie_x = dif_borne_x/2;
-          moitie_y = dif_borne_y/2;
+/*      if((inter.bix < msg_coord[0]) && (msg_coord[0] < inter.bsx))&& (inter.biy < msg_coord[1]) && (msg_coord[1] < inter.bsy)){
+*/      
+      if(is_in(msg_coord[0], inter.bix, inter.bsx) && is_in(msg_coord[1], inter.biy, inter.bsy)){
+
+    	  dif_borne_x = dif(inter.bsx, inter.bix);
+    	  dif_borne_y = dif(inter.bsy, inter.biy);
+  	    moitie_x = dif_borne_x/2;
+        moitie_y = dif_borne_y/2;
 
 
 
@@ -66,143 +68,142 @@ int ask_insertion(int my_rank){
 
 
 
-          if(dif_borne_x > dif_borne_y){
-            printf("%d : my zone is a rectangle horizontal\n", my_rank);
-      	    if (id_coord.x > moitie_x){
-      	      /*le nouveau noeud sera dans [bix ; moitie]*/
+        if(dif_borne_x > dif_borne_y){
+          printf("%d : my zone is a rectangle horizontal\n", my_rank);
+    	    if (id_coord.x > moitie_x){
+    	      /*le nouveau noeud sera dans [bix ; moitie]*/
 
-              printf("%d : [LEFT]bornes we send to node : %d %d %d %d\n", my_rank, inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
-
-
-              send_response(inter.bix, inter.bix+moitie_x, msg_coord[2]);
-              send_response(inter.biy, inter.bsy, msg_coord[2]);
+            printf("%d : [LEFT]bornes we send to node : %d %d %d %d\n", my_rank, inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
 
 
-              /* add the node into my neighbours list */
-              if(list_left == NULL){
-                list_left = init_list(msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
-                printf("%d : init list\n", my_rank);
-              }
-              else{
-                add_to_queue(list_left, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
-              }
-              update_bornes(my_rank, inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy);
-      	    }
-      	    else{
-      	      /*le nouveau noeud sera dans [moitie ; bsx]*/
-              printf("%d : [RIGHT]bornes we send to node : %d %d %d %d\n", my_rank, moitie_x+inter.bix, inter.bsx, inter.biy, inter.bsy);
-              send_response(inter.bix+moitie_x, inter.bsx, msg_coord[2]);
-              send_response(inter.biy, inter.bsy, msg_coord[2]);
-              if(list_right == NULL){
-                list_right = init_list(msg_coord[2], msg_coord[0], msg_coord[1], moitie_x+inter.bix, inter.bsx, inter.biy, inter.bsy);
-                printf("%d : init list\n", my_rank);
-              }
-              else{
-                add_to_queue(list_right, msg_coord[2], msg_coord[0], msg_coord[1], moitie_x+inter.bix, inter.bsx, inter.biy, inter.bsy);
-              }
-              update_bornes(my_rank, inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
-      	    }
-          }
+            send_response(inter.bix, inter.bix+moitie_x, msg_coord[2]);
+            send_response(inter.biy, inter.bsy, msg_coord[2]);
 
 
-
-
-      	  else if (dif_borne_x < dif_borne_y){
-      	    printf("%d : my zone is a rectangle vertical\n", my_rank);
-            if (id_coord.y > moitie_y){
-      	      /*le nouveau noeud sera dans [biy ; moitie]*/
-
-              printf("%d : [DOWN]bornes we send to node : %d %d %d %d\n", my_rank, inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y);
-              send_response(inter.bix, inter.bsx, msg_coord[2]);
-              send_response(inter.biy, inter.biy+moitie_y, msg_coord[2]);
-              if(list_down == NULL){
-                list_down = init_list(msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y);
-                printf("%d : init list\n", my_rank);
-
-              }
-              else{
-                add_to_queue(list_down, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y);
-              }
-              update_bornes(my_rank, inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy);
-
-      	    }
-      	    else{
-      	      /*le nouveau noeud sera dans [moitie ; bsy]*/
-
-              printf("%d : [UP]bornes we send to node : %d %d %d %d\n", my_rank, inter.bix, inter.bsx, moitie_y, inter.bsy);
-              send_response(inter.bix, inter.bsx, msg_coord[2]);
-              send_response(inter.biy+moitie_y, inter.bsy, msg_coord[2]);
-              if(list_up == NULL){
-                list_up = init_list(msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy);
-                printf("%d : init list\n", my_rank);
-              }
-              else{
-                add_to_queue(list_up, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy);
-              }
-              update_bornes(my_rank, inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y);
-
-      	    }
-      	  }
-
-
-
-
-
-
-
-          else{
-            printf("%d : my zone is a carre\n", my_rank);
-            if (id_coord.x > moitie_x){
-              /*if in the square i am in more than the half on x we make 2 vertical rectangles, choice to make */
-              printf("%d : [LEFT]bornes we send to node : %d %d %d %d\n", my_rank, inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
-
-
-              send_response(inter.bix, inter.bix+moitie_x, msg_coord[2]);
-              send_response(inter.biy, inter.bsy, msg_coord[2]);
-
-              if(list_left == NULL){
-                printf("%d %d %d %d \n", inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
-                list_left = init_list(msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
-                printf("%d : init list %p\n", my_rank, list_left);
-              }
-              else{
-                add_to_queue(list_left, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
-              }
-              
-              update_bornes(my_rank, inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy);
-
+            /* add the node into my neighbours list */
+            if(list_left == NULL){
+              list_left = init_list(msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
+              printf("%d : init list\n", my_rank);
             }
-            else if(id_coord.y > moitie_y){
-              /*if in the square i am in more than the half of the size on y we make 2 horizontal rectangles, choice to make*/
-              printf("%d : [DOWN]bornes we send to node : %d %d %d %d\n", my_rank, inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y);
-              send_response(inter.bix, inter.bsx, msg_coord[2]);
-              send_response(inter.biy, inter.biy+moitie_y, msg_coord[2]);
-              if(list_down == NULL){
-                list_down = init_list(msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y);
-                printf("%d : init list %p\n", my_rank, list_down);
-              }
-              else{
-                add_to_queue(list_down, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y);
-              }
-              update_bornes(my_rank, inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy);
+            else{
+              add_to_queue(list_left, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
+            }
+            update_bornes(my_rank, inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy);
+    	    }
+    	    else{
+    	      /*le nouveau noeud sera dans [moitie ; bsx]*/
+            printf("%d : [RIGHT]bornes we send to node : %d %d %d %d\n", my_rank, moitie_x+inter.bix, inter.bsx, inter.biy, inter.bsy);
+            send_response(inter.bix+moitie_x, inter.bsx, msg_coord[2]);
+            send_response(inter.biy, inter.bsy, msg_coord[2]);
+            if(list_right == NULL){
+              list_right = init_list(msg_coord[2], msg_coord[0], msg_coord[1], moitie_x+inter.bix, inter.bsx, inter.biy, inter.bsy);
+              printf("%d : init list\n", my_rank);
+            }
+            else{
+              add_to_queue(list_right, msg_coord[2], msg_coord[0], msg_coord[1], moitie_x+inter.bix, inter.bsx, inter.biy, inter.bsy);
+            }
+            update_bornes(my_rank, inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
+    	    }
+        }
+
+
+
+
+    	  else if (dif_borne_x < dif_borne_y){
+    	    printf("%d : my zone is a rectangle vertical\n", my_rank);
+          if (id_coord.y > moitie_y){
+    	      /*le nouveau noeud sera dans [biy ; moitie]*/
+
+            printf("%d : [DOWN]bornes we send to node : %d %d %d %d\n", my_rank, inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y);
+            send_response(inter.bix, inter.bsx, msg_coord[2]);
+            send_response(inter.biy, inter.biy+moitie_y, msg_coord[2]);
+            if(list_down == NULL){
+              list_down = init_list(msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y);
+              printf("%d : init list\n", my_rank);
 
             }
             else{
-              /* we are less than the half on x and on y (we're at the bottom left) */
-              /* random choice, we can in horizontal or in vertical rectangles*/
-              /* here the choice is to make vertical rectangles and, obviously, stay on the left */
-              printf("%d : [RIGHT]bornes we send to node : %d %d %d %d\n", my_rank, inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy);
-              send_response(inter.bix+moitie_x, inter.bsx, msg_coord[2]);
-              send_response(inter.biy, inter.bsy, msg_coord[2]);
-              if(list_right == NULL){
-                list_right = init_list(msg_coord[2], msg_coord[0], msg_coord[1], inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy);
-                printf("%d : init list %p\n", my_rank, list_right);
-              }
-              else{
-                add_to_queue(list_right, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy);
-              }
-              update_bornes(my_rank, inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
+              add_to_queue(list_down, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y);
             }
+            update_bornes(my_rank, inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy);
+
+    	    }
+    	    else{
+    	      /*le nouveau noeud sera dans [moitie ; bsy]*/
+
+            printf("%d : [UP]bornes we send to node : %d %d %d %d\n", my_rank, inter.bix, inter.bsx, moitie_y, inter.bsy);
+            send_response(inter.bix, inter.bsx, msg_coord[2]);
+            send_response(inter.biy+moitie_y, inter.bsy, msg_coord[2]);
+            if(list_up == NULL){
+              list_up = init_list(msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy);
+              printf("%d : init list\n", my_rank);
+            }
+            else{
+              add_to_queue(list_up, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy);
+            }
+            update_bornes(my_rank, inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y);
+
+    	    }
+    	  }
+
+
+
+
+
+
+
+        else{
+          printf("%d : my zone is a carre\n", my_rank);
+          if (id_coord.x > moitie_x){
+            /*if in the square i am in more than the half on x we make 2 vertical rectangles, choice to make */
+            printf("%d : [LEFT]bornes we send to node : %d %d %d %d\n", my_rank, inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
+
+
+            send_response(inter.bix, inter.bix+moitie_x, msg_coord[2]);
+            send_response(inter.biy, inter.bsy, msg_coord[2]);
+
+            if(list_left == NULL){
+              printf("%d %d %d %d \n", inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
+              list_left = init_list(msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
+              printf("%d : init list %p\n", my_rank, list_left);
+            }
+            else{
+              add_to_queue(list_left, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
+            }
+            
+            update_bornes(my_rank, inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy);
+
+          }
+          else if(id_coord.y > moitie_y){
+            /*if in the square i am in more than the half of the size on y we make 2 horizontal rectangles, choice to make*/
+            printf("%d : [DOWN]bornes we send to node : %d %d %d %d\n", my_rank, inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y);
+            send_response(inter.bix, inter.bsx, msg_coord[2]);
+            send_response(inter.biy, inter.biy+moitie_y, msg_coord[2]);
+            if(list_down == NULL){
+              list_down = init_list(msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y);
+              printf("%d : init list %p\n", my_rank, list_down);
+            }
+            else{
+              add_to_queue(list_down, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y);
+            }
+            update_bornes(my_rank, inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy);
+
+          }
+          else{
+            /* we are less than the half on x and on y (we're at the bottom left) */
+            /* random choice, we can in horizontal or in vertical rectangles*/
+            /* here the choice is to make vertical rectangles and, obviously, stay on the left */
+            printf("%d : [RIGHT]bornes we send to node : %d %d %d %d\n", my_rank, inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy);
+            send_response(inter.bix+moitie_x, inter.bsx, msg_coord[2]);
+            send_response(inter.biy, inter.bsy, msg_coord[2]);
+            if(list_right == NULL){
+              list_right = init_list(msg_coord[2], msg_coord[0], msg_coord[1], inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy);
+              printf("%d : init list %p\n", my_rank, list_right);
+            }
+            else{
+              add_to_queue(list_right, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy);
+            }
+            update_bornes(my_rank, inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
           }
         }
       }
@@ -241,13 +242,11 @@ int ask_insertion(int my_rank){
     case __TAG_RESP_INSERT:
       if (done){
         printf("%d : received __TAG_RESP_INSERT %d\n", my_rank, status.MPI_TAG);
-        if (is_in(id_coord.x, buf[0], buf[1]) && is_in(id_coord.y, msg_coord[0], msg_coord[1]) ){
-          //printf("%d : in my bornes\n", my_rank);
-          update_bornes(my_rank, buf[0], buf[1], msg_coord[0], msg_coord[1]);
-        }
-        else{
+        if (!(is_in(id_coord.x, buf[0], buf[1]) && is_in(id_coord.y, msg_coord[0], msg_coord[1]))){
+          /* we are not in the area the node containing our coords is going to insert us, so we change ou coords to match the good bornes */
           choose_new_coords(my_rank, buf[0], buf[1], msg_coord[0], msg_coord[1]);
         }
+        update_bornes(my_rank, buf[0], buf[1], msg_coord[0], msg_coord[1]);
         MPI_Send(msg_coord, 3, MPI_INT, 0, __TAG_NODE_INSERTED, MPI_COMM_WORLD);
         done=0;
       }
