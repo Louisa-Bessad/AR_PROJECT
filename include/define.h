@@ -8,6 +8,7 @@
 #define __TAG_INSERT_ME 3
 #define __TAG_END_INSERTED 4
 #define __TAG_RESP_INSERT 5
+#define __TAG_ADD_NEIGH 6
 
 
 #endif

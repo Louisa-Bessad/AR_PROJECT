@@ -15,6 +15,8 @@ borne inter;
  
 int init_coordinateur(int);
 int init_node(int);
-void init_struct(int, int, coordonnee *);
+coordonnee init_struct(int, int);
+borne init_borne( int, int, int, int);
+nei_list* init_list (int , int , int , int , int , int , int );
 
 #endif

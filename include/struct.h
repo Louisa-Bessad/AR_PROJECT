@@ -18,4 +18,12 @@ typedef struct borne{
   int bsy;
 } borne;
 
+typedef struct double_circular_linked_list{
+	int rank;
+	coordonnee point;
+	borne inter;
+	struct double_circular_linked_list *next;
+	struct double_circular_linked_list *prev;
+} nei_list;
+
 #endif
