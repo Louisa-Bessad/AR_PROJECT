@@ -2,6 +2,8 @@
 #define __MPI_PROJ
 
 
+/* The main header of the program, containing main functions */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

@@ -37,16 +37,27 @@ int ask_insertion(int my_rank){
 
     MPI_Recv(msg_coord, 3, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 
+
     switch(status.MPI_TAG){
+
+
+
+
+
+
+
 
 
     case __TAG_BEGIN_INSERT:
       printf("%d : received __TAG_BEGIN_INSERT %d\n", my_rank, status.MPI_TAG);
       if (my_rank>1){
+
         /* all the nodes ask where to insert themself */
         msg_coord[0]=id_coord.x;
         msg_coord[1]=id_coord.y;
         msg_coord[2]=my_rank;
+
+        /* Sending a request for insertion to the BOOTSTRAP*/
         MPI_Send(&msg_coord,3, MPI_INT, 1, __TAG_INSERT_ME, MPI_COMM_WORLD);
         printf("%d : envoi à 1 de __TAG_INSERT_ME\n", my_rank); 
       }
@@ -57,31 +68,34 @@ int ask_insertion(int my_rank){
       break;
 
 
+
+
+
+
+
+
+
+
     case __TAG_INSERT_ME:
-  	  printf("%d : received __TAG_INSERT_ME received : %d %d , bornes : %d %d %d %d\n", my_rank, msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.bsy);
-/*      if((inter.bix < msg_coord[0]) && (msg_coord[0] < inter.bsx))&& (inter.biy < msg_coord[1]) && (msg_coord[1] < inter.bsy)){
-*/      
+  	  printf("%d : received __TAG_INSERT_ME received : %d %d , my bornes : %d %d %d %d\n", my_rank, msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.bsy);
+      
       if(is_in(msg_coord[0], inter.bix, inter.bsx) && is_in(msg_coord[1], inter.biy, inter.bsy)){
 
+        /******* The neighbour is trying to insert into the area we "control" ******/
     	  dif_borne_x = dif(inter.bsx, inter.bix);
     	  dif_borne_y = dif(inter.bsy, inter.biy);
   	    moitie_x = dif_borne_x/2;
         moitie_y = dif_borne_y/2;
 
 
-
-
-
-
-
         if(dif_borne_x > dif_borne_y){
+
           printf("%d : my zone is a rectangle horizontal\n", my_rank);
     	    if (id_coord.x > moitie_x){
-    	      /*le nouveau noeud sera dans [bix ; moitie]*/
-
+    	      /*the new node will be in [bix ; moitie]*/
             printf("%d : [LEFT]bornes we send to node : %d %d %d %d\n", my_rank, inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
 
-
+            /* We send him the area he will manage */
             send_response(inter.bix, inter.bix+moitie_x, msg_coord[2]);
             send_response(inter.biy, inter.bsy, msg_coord[2]);
 
@@ -89,21 +103,38 @@ int ask_insertion(int my_rank){
             /* add the node into my neighbours list */
             if(list_left == NULL){
               list_left = init_list(msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
-              printf("%d : init list\n", my_rank);
             }
             else{
+              /* add the new neighbour to the correspondigng line */
               add_to_queue(list_left, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
+
+              /* telling all neighbours on this side that they'll need to add the new guy */
               update_all_neighbours(list_left, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy, 3);
+
+              /* we tell them that we are not anymore neighbours... Sorry :'( maybe one day */
               send_del_to_neighbours(list_left,my_rank, 3);
             }
 
+            /********* Now , since we split in two parts, some of our neighbours will still be in our area, but some not. So we need to update our value in their list
+            when we are still neighbours, and the others will have our new neighbour as a neighbour
+
+            **** for example, in this case, if  we split vertically, our UP and DOWN side are concerned by this statement *****/
+
 
             if(list_up != NULL){
+            /* Seraching neighbours that will ONLY be aside THE NEW NODE*/
             tosend = find_neighbours_to_update(list_up, inter.bix, inter.bix+moitie_x, 0, 4);
-            /*We search neighbours to update*/
+
+            /* we send them the new guy */
             send_add_to_neighbours(tosend, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy,4);
+
+            /* we tell them that... it is over for us... :'''( we had good times together */
             send_del_to_neighbours(tosend,my_rank,4);
+
+            /* finding neighbours that will only be aside US */
             tosend = find_neighbours_to_update(list_up, inter.bix+moitie_x, inter.bsx, 0, 4);
+
+            /* updating our value in their list */
             update_me_all_neighbours(tosend, my_rank, inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy,4);
             }
             if(list_down != NULL){
@@ -404,13 +435,21 @@ int ask_insertion(int my_rank){
         }
       }
       break;
+
+
+
+
+
+
     case __TAG_RESP_INSERT:
       if (done){
         printf("%d : received __TAG_RESP_INSERT %d\n", my_rank, status.MPI_TAG);
         if (!(is_in(id_coord.x, buf[0], buf[1]) && is_in(id_coord.y, msg_coord[0], msg_coord[1]))){
+
           /* we are not in the area the node containing our coords is going to insert us, so we change ou coords to match the good bornes */
           choose_new_coords(my_rank, buf[0], buf[1], msg_coord[0], msg_coord[1]);
         }
+
         update_bornes(my_rank, buf[0], buf[1], msg_coord[0], msg_coord[1]);
         MPI_Send(msg_coord, 3, MPI_INT, 0, __TAG_NODE_INSERTED, MPI_COMM_WORLD);
         done=0;
@@ -422,6 +461,12 @@ int ask_insertion(int my_rank){
       }
       break;
 
+
+
+
+
+
+
     case __TAG_ADD_NEIGH:
       done=0;
       if(done < 8){
@@ -431,6 +476,8 @@ int ask_insertion(int my_rank){
         done+=2;
       }
       else{
+
+        /*Somebody's telling us to insert a new neighbour in our neighbours' list */
 
         if(buf[2] > inter.bsx){
           /* save to left neighbour */
