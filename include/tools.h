@@ -18,4 +18,14 @@ void add_after (nei_list*, int, int, int, int, int, int, int);
 void add_to_queue (nei_list*, int, int, int, int, int, int, int);
 int find_neighbour (nei_list*, int, int);
 
+
+nei_list* find_neighbours_to_update(nei_list* , int, int, int, int);
+int update_all_neighbours(nei_list*, int, int, int, int, int, int, int,int);
+void send_add_to_neighbours(nei_list*, int, int, int, int, int, int, int, int);
+void send_del_to_neighbours(nei_list*, int, int);
+int send_update(int, int, int);
+void update_me_all_neighbours(nei_list*, int, int, int, int, int, int);
+void update_node (nei_list*, int , int , int , int , int );
+void del_neighbour_in_list(nei_list*, int );
+
 #endif

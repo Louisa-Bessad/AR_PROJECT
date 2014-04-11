@@ -101,3 +101,155 @@ int find_neighbour (nei_list* racine, int val, int mode){
 	}
 	return -1;
 }
+
+
+int send_add(int val1, int val2, int dest){
+  int msg_coord[3];
+  msg_coord[0] = val1;
+  msg_coord[1] = val2;
+  MPI_Send(msg_coord, 3, MPI_INT, dest, __TAG_ADD_NEIGH, MPI_COMM_WORLD);
+  return 1;
+}
+
+int send_del(int val1, int val2, int dest){
+  int msg_coord[3];
+  msg_coord[0] = val1;
+  msg_coord[1] = val2;
+  MPI_Send(msg_coord, 3, MPI_INT, dest, __TAG_DEL_NEIGH, MPI_COMM_WORLD);
+  return 1;
+}
+
+int update_all_neighbours(nei_list* list, int rank, int coord_x, int coord_y, int inf_x, int sup_x, int inf_y, int sup_y, int val){
+
+	nei_list* it_list = list;
+
+	do {
+
+		send_add(rank, val, it_list->rank);
+		send_add(coord_x, coord_y, it_list->rank);
+		send_add(inf_x, sup_x, it_list->rank);
+		send_add(inf_y, sup_y, it_list->rank);
+
+	} while(it_list->next != list);
+} 
+
+void update_me_all_neighbours(nei_list* list, int rank, int inf_x, int sup_x, int inf_y, int sup_y, int val){
+	nei_list* it_list = list;
+
+	do {
+
+		send_update(rank, val, it_list->rank);
+		send_update(id_coord.x, id_coord.y, it_list->rank);
+		send_update(inf_x, sup_x, it_list->rank);
+		send_update(inf_y, sup_y, it_list->rank);
+
+	} while(it_list->next != list);
+}
+
+
+nei_list* find_neighbours_to_update(nei_list* list, int inf, int sup, int mode, int val){
+	nei_list* it_list = list, *tosend = NULL;
+	do
+	{
+		if (mode){
+
+			if ((it_list->point.x < inf) && (sup < it_list->point.x)){
+				if(tosend == NULL){
+					tosend=it_list;
+				}
+				else{
+
+					list -> prev -> next = tosend;
+					list->prev = tosend;
+					tosend -> prev = list->prev;
+					tosend->next = list;
+
+				}
+			}
+
+		}
+
+
+		else{
+			if (( it_list->point.y < inf) && (sup < it_list->point.y)){
+				if(tosend == NULL){
+					tosend=it_list;
+				}
+				else{
+					list -> prev -> next = tosend;
+					list->prev = tosend;
+					tosend -> prev = list->prev;
+					tosend->next = list;
+
+				}
+			}
+
+		}
+
+		it_list = it_list->next;
+	}	while(it_list->next!=list);
+
+	return tosend;
+}
+
+
+void send_add_to_neighbours(nei_list* list, int rank, int coord_x, int coord_y, int inf_x, int sup_x, int inf_y, int sup_y, int val){
+	nei_list* it = list;
+	do
+	{
+		send_add(rank, val, it->rank);
+		send_add(coord_x, coord_y, it->rank);
+		send_add(inf_x, sup_x, it->rank);
+		send_add(inf_y, sup_y, it->rank);
+	}while(it->next != list);
+}
+
+
+
+void send_del_to_neighbours(nei_list* list, int rank, int val){
+	nei_list* it = list;
+	do
+	{
+		send_del(rank, val, it->rank);
+		
+	}while(it->next != list);
+}
+
+int send_update(int val1, int val2, int dest){
+  int msg_coord[3];
+  msg_coord[0] = val1;
+  msg_coord[1] = val2;
+  MPI_Send(msg_coord, 3, MPI_INT, dest, __TAG_UPDATE_NEIGH, MPI_COMM_WORLD);
+  return 1;
+}
+
+
+void del_neighbour_in_list(nei_list* list, int rank){
+	nei_list* it = list;
+	do
+	{
+		if(it->rank == rank){
+			it->prev->next = it->next;
+			it->next->prev = it-> prev;
+			free(it);
+			return;
+		}
+		
+	}while(it->next != list);
+}
+
+void update_node (nei_list* list, int rank, int inf_x, int sup_x, int inf_y, int sup_y){
+	nei_list* it = list;
+	do
+	{
+		if(it->rank == rank){
+			it->inter.bix = inf_x;
+			it->inter.bsx = sup_x;
+			it->inter.biy = inf_y;
+			it->inter.bsy = sup_y;
+			return;
+		}
+		
+	}while(it->next != list);
+
+}

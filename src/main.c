@@ -31,7 +31,7 @@ int ask_insertion(int my_rank){
   int msg, msg_coord[3], buf[8];
   MPI_Status status;
   int dif_borne_x, dif_borne_y,  moitie_x, moitie_y, done=0, dest;
-  nei_list *list_up = NULL, *list_down = NULL, *list_left = NULL, *list_right = NULL; 
+  nei_list *list_up = NULL, *list_down = NULL, *list_left = NULL, *list_right = NULL, *tosend = NULL; 
 
   while(1){
 
@@ -93,9 +93,35 @@ int ask_insertion(int my_rank){
             }
             else{
               add_to_queue(list_left, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
+              update_all_neighbours(list_left, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy, 3);
+              send_del_to_neighbours(list_left,my_rank, 3);
             }
+
+
+            if(list_up != NULL){
+            tosend = find_neighbours_to_update(list_up, inter.bix, inter.bix+moitie_x, 0, 4);
+            /*We search neighbours to update*/
+            send_add_to_neighbours(tosend, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy,4);
+            send_del_to_neighbours(tosend,my_rank,4);
+            tosend = find_neighbours_to_update(list_up, inter.bix+moitie_x, inter.bsx, 0, 4);
+            update_me_all_neighbours(tosend, my_rank, inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy,4);
+            }
+            if(list_down != NULL){
+            tosend = find_neighbours_to_update(list_down, inter.bix, inter.bix+moitie_x, 0, 2);
+            /*We search neighbours to update*/
+            send_add_to_neighbours(tosend, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy,2);
+            send_del_to_neighbours(tosend,my_rank,2);
+            tosend = find_neighbours_to_update(list_down, inter.bix+moitie_x, inter.bsx, 0, 2);
+            update_me_all_neighbours(tosend, my_rank, inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy,2);
+            }
+
+            /*we send to neighbours that we change our bournes*/
+
             update_bornes(my_rank, inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy);
     	    }
+
+
+
     	    else{
     	      /*le nouveau noeud sera dans [moitie ; bsx]*/
             printf("%d : [RIGHT]bornes we send to node : %d %d %d %d\n", my_rank, moitie_x+inter.bix, inter.bsx, inter.biy, inter.bsy);
@@ -107,7 +133,25 @@ int ask_insertion(int my_rank){
             }
             else{
               add_to_queue(list_right, msg_coord[2], msg_coord[0], msg_coord[1], moitie_x+inter.bix, inter.bsx, inter.biy, inter.bsy);
+              update_all_neighbours(list_right, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy, 1);
+              send_del_to_neighbours(list_right,my_rank,1);
             }
+
+            if(list_up != NULL){
+              tosend = find_neighbours_to_update(list_up, moitie_x+inter.bix, inter.bsx, 0, 4);
+             /*We search neighbours to update*/
+              send_add_to_neighbours(tosend, msg_coord[2], msg_coord[0], msg_coord[1], moitie_x+inter.bix, inter.bsx, inter.biy, inter.bsy,4);
+              send_del_to_neighbours(tosend,my_rank,4);
+              tosend = find_neighbours_to_update(list_up, inter.bix+moitie_x, inter.bsx, 0, 4);
+              update_me_all_neighbours(tosend, my_rank, inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy,4);
+            }
+            if(list_down != NULL){
+              tosend = find_neighbours_to_update(list_down, moitie_x+inter.bix, inter.bsx, 0, 2);
+             /*We search neighbours to update*/
+              send_add_to_neighbours(tosend, msg_coord[2], msg_coord[0], msg_coord[1], moitie_x+inter.bix, inter.bsx, inter.biy, inter.bsy,2);
+              send_del_to_neighbours(tosend,my_rank,2);
+            }
+
             update_bornes(my_rank, inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
     	    }
         }
@@ -130,7 +174,32 @@ int ask_insertion(int my_rank){
             }
             else{
               add_to_queue(list_down, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y);
+              update_all_neighbours(list_down, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y, 2);
+
+              send_del_to_neighbours(list_down,my_rank,2);
             }
+
+          if(list_right != NULL){
+            tosend = find_neighbours_to_update(list_right, inter.biy, inter.biy+moitie_y, 1,1);
+           /*We search neighbours to update*/
+            send_add_to_neighbours(tosend, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y,1);
+            send_del_to_neighbours(tosend,my_rank,1);
+            tosend = find_neighbours_to_update(list_right, inter.bix+moitie_x, inter.bsx, 0,1);
+            update_me_all_neighbours(tosend, my_rank, inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy,1);
+          }
+  
+        if(list_left!=NULL){      
+            tosend = find_neighbours_to_update(list_left, inter.biy, inter.biy+moitie_y, 1,3);
+            /*We search neighbours to update*/
+            send_add_to_neighbours(tosend, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y,3);
+            send_del_to_neighbours(tosend,my_rank,3);
+            tosend = find_neighbours_to_update(list_left, inter.bix+moitie_x, inter.bsx, 0,3);
+            update_me_all_neighbours(tosend, my_rank, inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy,3);
+
+        }
+            /*we send to neighbours that we change our bournes*/
+
+
             update_bornes(my_rank, inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy);
 
     	    }
@@ -146,7 +215,29 @@ int ask_insertion(int my_rank){
             }
             else{
               add_to_queue(list_up, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy);
+              update_all_neighbours(list_up, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy, 4);
+              send_del_to_neighbours(list_up,my_rank,4);
+            } 
+
+            if (list_right!=NULL){
+              tosend = find_neighbours_to_update(list_right, inter.biy, inter.biy+moitie_y, 1,1);
+             /*We search neighbours to update*/
+              send_add_to_neighbours(tosend, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy,1);
+              send_del_to_neighbours(tosend,my_rank,1);
+              tosend = find_neighbours_to_update(list_right, inter.bix+moitie_x, inter.bsx, 0,1);
+              update_me_all_neighbours(tosend, my_rank, inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y,1);
             }
+            if(list_left!=NULL){
+              tosend = find_neighbours_to_update(list_left, inter.biy, inter.biy+moitie_y, 1,3);
+              /*We search neighbours to update*/
+              send_add_to_neighbours(tosend, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy,3);
+              send_del_to_neighbours(tosend,my_rank,3);
+              tosend = find_neighbours_to_update(list_left, inter.bix+moitie_x, inter.bsx, 0,3);
+              update_me_all_neighbours(tosend, my_rank, inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y,3);
+            }
+            /*we send to neighbours that we change our bournes*/
+
+
             update_bornes(my_rank, inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y);
 
     	    }
@@ -175,8 +266,31 @@ int ask_insertion(int my_rank){
             }
             else{
               add_to_queue(list_left, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
+             update_all_neighbours(list_left, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy,3);
+            send_del_to_neighbours(list_left,my_rank,3);
             }
-            
+
+            if(list_up!=NULL){
+            tosend = find_neighbours_to_update(list_up, inter.bix, inter.bix+moitie_x, 0,4);
+            /*We search neighbours to update*/
+            send_add_to_neighbours(tosend, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy,4);
+            send_del_to_neighbours(tosend,my_rank,4);
+            tosend = find_neighbours_to_update(list_up, inter.bix+moitie_x, inter.bsx, 0,4);
+            update_me_all_neighbours(tosend, my_rank, inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy,4);
+          }
+
+          if(list_down){
+            tosend = find_neighbours_to_update(list_down, inter.bix, inter.bix+moitie_x, 0,2);
+            /*We search neighbours to update*/
+            send_add_to_neighbours(tosend, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy,2);
+            send_del_to_neighbours(tosend,my_rank,2);
+            tosend = find_neighbours_to_update(list_down, inter.bix+moitie_x, inter.bsx, 0,2);
+            update_me_all_neighbours(tosend, my_rank, inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy,2);
+          }
+          
+            /*we send to neighbours that we change our bournes*/
+
+
             update_bornes(my_rank, inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy);
 
           }
@@ -191,7 +305,29 @@ int ask_insertion(int my_rank){
             }
             else{
               add_to_queue(list_down, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y);
-            }
+              update_all_neighbours(list_down, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y,2);
+              send_del_to_neighbours(list_down,my_rank,2);
+            }            
+
+            if(list_right!=NULL){
+            tosend = find_neighbours_to_update(list_right, inter.biy, inter.biy+moitie_y, 1,1);
+            /*We search neighbours to update*/
+            send_add_to_neighbours(tosend, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y,1);
+            send_del_to_neighbours(tosend,my_rank,1);
+            tosend = find_neighbours_to_update(list_right, inter.bix+moitie_x, inter.bsx, 0,1);
+            update_me_all_neighbours(tosend, my_rank, inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy,1);
+          }
+
+          if(list_left){
+            tosend = find_neighbours_to_update(list_left, inter.biy, inter.biy+moitie_y, 1,3);
+            /*We search neighbours to update*/
+            send_add_to_neighbours(tosend, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bsx, inter.biy, inter.biy+moitie_y,3);
+            send_del_to_neighbours(tosend,my_rank,3);
+            tosend = find_neighbours_to_update(list_left, inter.bix+moitie_x, inter.bsx, 0,3);
+            update_me_all_neighbours(tosend, my_rank,  inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy,3);
+          }
+            /*we send to neighbours that we change our bournes*/
+
             update_bornes(my_rank, inter.bix, inter.bsx, inter.biy+moitie_y, inter.bsy);
 
           }
@@ -208,11 +344,36 @@ int ask_insertion(int my_rank){
             }
             else{
               add_to_queue(list_right, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix+moitie_x, inter.bsx, inter.biy, inter.bsy);
-            }
+              update_all_neighbours(list_right, msg_coord[2], msg_coord[0], msg_coord[1], inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy,1);
+              send_del_to_neighbours(list_right,my_rank,1);
+            }            
+
+
+            if(list_up!=NULL){
+            tosend = find_neighbours_to_update(list_up, moitie_x+inter.bix, inter.bsx, 0,4);
+            /*We search neighbours to update*/
+            send_add_to_neighbours(tosend, msg_coord[2], msg_coord[0], msg_coord[1], moitie_x+inter.bix, inter.bsx, inter.biy, inter.bsy,4);
+            send_del_to_neighbours(tosend,my_rank,4);
+            tosend = find_neighbours_to_update(list_up, inter.bix+moitie_x, inter.bsx, 0,4);
+            update_me_all_neighbours(tosend, my_rank, inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy,4);
+          }
+
+            if(list_down!=NULL){
+            tosend = find_neighbours_to_update(list_down, moitie_x+inter.bix, inter.bsx, 0,2);
+            /*We search neighbours to update*/
+            send_add_to_neighbours(tosend, msg_coord[2], msg_coord[0], msg_coord[1], moitie_x+inter.bix, inter.bsx, inter.biy, inter.bsy,2);
+            send_del_to_neighbours(tosend,my_rank,2);
+            tosend = find_neighbours_to_update(list_down, inter.bix+moitie_x, inter.bsx, 0,2);
+            update_me_all_neighbours(tosend, my_rank,  inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy,2);
+          }
+            /*we send to neighbours that we change our bournes*/
+
+
             update_bornes(my_rank, inter.bix, inter.bix+moitie_x, inter.biy, inter.bsy);
           }
         }
       }
+
       else{
         /*route node to the good neighbour*/
         printf("%d : route to neighbours\n", my_rank);
@@ -242,9 +403,7 @@ int ask_insertion(int my_rank){
           MPI_Send(msg_coord, 3, MPI_INT, dest, __TAG_INSERT_ME, MPI_COMM_WORLD);
         }
       }
-	    break;
-
-
+      break;
     case __TAG_RESP_INSERT:
       if (done){
         printf("%d : received __TAG_RESP_INSERT %d\n", my_rank, status.MPI_TAG);
@@ -261,13 +420,13 @@ int ask_insertion(int my_rank){
         buf[1]=msg_coord[1];
         done=1;
       }
-
+      break;
 
     case __TAG_ADD_NEIGH:
       done=0;
       if(done < 8){
         buf[done]=msg_coord[0];
-        if(done > 1)
+        if(done > 0)
           buf[done+1] = msg_coord[1];
         done+=2;
       }
@@ -313,11 +472,71 @@ int ask_insertion(int my_rank){
         }
         done=0;
       }
+      break;
 
+
+
+
+
+
+    case __TAG_DEL_NEIGH :
+    /* somebody asks us to delete a neighbour */
+      switch (buf[1]){
+        case 1:
+          del_neighbour_in_list(list_left, buf[0]);
+      
+      break;
+        case 2:
+          del_neighbour_in_list(list_up, buf[0]);
+      
+      break;
+        case 3:
+          del_neighbour_in_list(list_right, buf[0]);
+      
+      break;
+        case 4:
+          del_neighbour_in_list(list_down, buf[0]);
+      
+      break;
+    }
+    break;
+
+
+
+
+
+
+    case __TAG_UPDATE_NEIGH :
+      done=0;
+      if(done < 8){
+        buf[done]=msg_coord[0];
+        if(done > 0)
+          buf[done+1] = msg_coord[1];
+        done+=2;
+      }
+
+      switch (buf[1]){
+        case 1:
+          update_node(list_left, buf[0], buf[4], buf[5], buf[6], buf[7]);
+          break;
+        case 2:
+          update_node(list_up, buf[0], buf[4], buf[5], buf[6], buf[7]);
+          break;
+        case 3:
+          update_node(list_right, buf[0], buf[4], buf[5], buf[6], buf[7]);
+          break;
+        case 4:
+          update_node(list_down, buf[0], buf[4], buf[5], buf[6], buf[7]);
+          break;
+      }
 
     default:
 	    break;
     }
+
+
+
+
   }
   return 0;
 }
